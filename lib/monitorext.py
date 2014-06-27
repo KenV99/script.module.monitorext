@@ -1,11 +1,11 @@
-import xbmc
 import threading
-import xbmcaddon
 from json import loads as jloads
 
+import xbmc
+import xbmcaddon
 
 __p__ = None
-__addon__ = xbmcaddon.Addon()
+__addon__ = xbmcaddon.Addon('script.module.monitorext')
 __scriptname__ = __addon__.getAddonInfo('name')
 
 
@@ -49,9 +49,13 @@ def getPlayingState():
     @return: 'Unknown', 'Playing' or 'Stopped'
     @rtype: str
     """
-    ps = 'Unknown'
     if __p__ is not None:
         if __p__.isPlaying():
+            ps = 'Playing'
+        else:
+            ps = 'Stopped'
+    else:
+        if xbmc.Player.isPlaying(xbmc.Player()):
             ps = 'Playing'
         else:
             ps = 'Stopped'
@@ -164,8 +168,13 @@ class MonitorEx(xbmc.Monitor):
     def __onPlaybackStarted(self):
         if getPlayingState() == 'Playing':
             self.onPlaybackStarted()
+        else:
+            self.onPlaybackStopped()
 
     def onPlaybackStarted(self):
+        pass
+
+    def onPlaybackStopped(self):
         pass
 
     def Listen(self, **kwargs):
@@ -181,9 +190,7 @@ class MonitorEx(xbmc.Monitor):
         @type playbackInterval: int
         @param kwargs: interval, stereoInterval, profileInterval, playbackInterval
         """
-        _stereoInterval = 1000
-        _profileInterval = 1000
-        _playbackInterval = 1000
+
         if kwargs['interval'] is not None:
             try:
                 _interval = int(kwargs['interval'])
@@ -191,6 +198,10 @@ class MonitorEx(xbmc.Monitor):
                 _interval = 1000
         else:
             _interval = 1000
+        _stereoInterval = _interval
+        _profileInterval = _interval
+        _playbackInterval = _interval
+
         if self.monitorStereoMode:
             if 'stereoInterval' in kwargs:
                 try:
